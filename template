@@ -1,0 +1,52 @@
+#!/bin/bash
+# Script template for my bash projects
+
+# Constants
+DEBUG=1
+VERBOSE=0
+
+# Functions
+err() { printf "$0[error]: %s\n" "$*" >&2; exit 2; }
+debug() { ((DEBUG)) && printf "$0[debug]: %s\n" "$*" >&2; }
+verbose() { ((VERBOSE)) && printf "$0[info:] %s\n" "$*" >&2; }
+help() { printf '%s\n' "
+Usage:  $0 [-v] [-o arg] arg...
+        $0 -h
+        
+        -v      ...verbose
+        -o arg  ...option with argument
+        -h      ...this help
+"; }
+
+# Test options
+while getopts 'hvo:' opt; do
+  case $opt in
+    h) help; exit 0;;
+    v) ((VERBOSE++));;
+    o) OPTION_ARGUMENT="${OPTARG}";;
+   \?) help >&2; exit 1;; # Option not recognized hence print help and exit with error
+  esac
+done
+shift $(( OPTIND-1 )) # Get rid off all options only left arguments starting with $1
+
+# Test arguments
+if [ $# -eq 0 ]
+then
+  help >&2
+  err "Missing argument"
+fi
+
+# Variables
+tmp=$( mktemp -d ) || err "Cannot create temporary directory"
+verbose "Created temporary directory ${tmp}"
+trap 'rm -rf "$tmp"' EXIT # Run cleanup if script fails before reaching its end
+
+# For loop will go through all arguments by default if "in" is not present
+debug "Option argument: ${OPTION_ARGUMENT}"
+for script_argument; do
+  debug "Script argument: ${script_argument}"
+done
+
+# Cleanup
+rm -rf "$tmp"
+verbose "Deleted temporary directory ${tmp}"
